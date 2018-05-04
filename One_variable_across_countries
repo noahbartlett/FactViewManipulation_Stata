@@ -1,0 +1,41 @@
+**   Purpose: create an aggregate site dataset across countries for certain variables
+**   Updated: 06/29/2017
+
+**   Adapted from Aaron Chafetz
+**   https://github.com/achafetz/PartnerProgress/blob/master/01_partnerreport_all_site_tx_append.do
+
+/* NOTES
+	- Data source: ICPI_Fact_View_PSNU_IM_20160915 [ICPI Data Store]
+	- Report uses FY2016APR results since it sums up necessary values
+	- Report aggregates DSD and TA
+	- Report looks across TX_CURR & TX_NEW
+*/
+********************************************************************************
+
+*set date of frozen instance - needs to be changed w/ updated data
+	global datestamp "20170515_v1_1"
+
+*convert files from txt to dta for appending and keep only certain indicators and dissagregates 
+
+** THIS EXAMPLE IS FOR TX_NEW AND TX_CURR, TOTAL DISSAGREGATES
+
+	cd "C:/Users/nbartlett/Documents/ICPI Data/MER/ICPI FactView 2017.05.15/Site Level"
+	fs 
+	foreach ou in `r(files)'{
+		display "import/save: `ou'"
+		quietly: import delimited "`ou'", clear
+		*keep just TX_NEW and TX_CURR
+		quietly: keep if inlist(indicator, "TX_NEW" , "TX_CURR") & disaggregate=="Total Numerator"
+		quietly: save "`ou'.dta", replace
+		}
+		*end
+
+*append all ou files together
+	clear
+	fs *.dta
+	append using `r(files)', force
+	
+*save all site file
+	save "C:/Users/nbartlett/Documents/ICPI Data/MER/ICPI FactView 2017.05.15/Site Level/ICPIFactView_ALLTX_Site_IM${datestamp}", replace
+	
+	
